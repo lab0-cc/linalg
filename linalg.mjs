@@ -94,6 +94,21 @@ export class Angle2 extends Complex {
 }
 
 
+// 2D matrix class
+export class Matrix2 {
+    constructor(a, b, c, d) {
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
+    }
+
+    appliedTo(v) {
+        return new v.constructor(this.a * v.x + this.b * v.y, this.c * v.x + this.d * v.y);
+    }
+}
+
+
 // 3D point class
 export class Point3 {
     constructor(x, y, z) {
