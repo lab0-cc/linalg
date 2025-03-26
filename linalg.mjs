@@ -114,9 +114,19 @@ export class Angle2 extends Complex {
 }
 
 
+// Shape class
+class Shape {
+    // Update a point in the shape
+    update(i, p) {
+        this.points[i] = p;
+    }
+}
+
+
 // 2D line class
-export class Line2 {
+export class Line2 extends Shape {
     constructor(p, o) {
+        super();
         this.p = p;
         if (o instanceof Point2) {
             this.o = o;
@@ -165,6 +175,20 @@ export class Line2 {
         const den = this.v.cross(l.v);
         const v = this.p.to(l.p).scaled(1 / den);
         return this._validIntersectionFactor(v.cross(l.v)) && l._validIntersectionFactor(v.cross(this.v));
+    }
+
+    // Update a point in the line
+    update(i, p) {
+        super.update(i, p);
+        switch (i) {
+            case 0:
+                this.p = p;
+                break;
+            case 1:
+                this.o = p;
+                break;
+        }
+        this.v = this.p.to(this.o);
     }
 }
 
@@ -294,13 +318,14 @@ export class BoundingBox2 {
 
 
 // 2D polygon class
-export class Polygon2 {
+export class Polygon2 extends Shape {
     #open;
     #selfIntersecting;
     #boundingBox;
     #edges;
 
     constructor(points, open=false) {
+        super();
         this.points = points;
         this.#open = open;
         this.#reset();
@@ -420,6 +445,27 @@ export class Polygon2 {
                 if (edge.intersects(edge2))
                     return true;
         return false;
+    }
+
+    // Update a point in the polygon
+    update(i, p) {
+        super.update(i, p);
+        this.points[i].index = i;
+        this.#reset();
+    }
+
+    // Insert a point in the polygon
+    insert(i, p) {
+        this.points.splice(i, 0, p);
+        this.#reset();
+        this.#reindex();
+    }
+
+    // Remove a point from the polygon
+    remove(i) {
+        this.points.splice(i, 1);
+        this.#reset();
+        this.#reindex();
     }
 }
 
