@@ -35,6 +35,12 @@ export class Vector2 {
                                     this.x * angle.sin + this.y * angle.cos);
     }
 
+    // Return the angle relative to the x unit vector
+    angle() {
+        const norm = this.norm();
+        return new Complex(this.x / norm, this.y / norm);
+    }
+
     // Return a new vector scaled by the given factor
     scaled(factor) {
         return new this.constructor(this.x * factor, this.y * factor);
@@ -45,9 +51,14 @@ export class Vector2 {
         return this.x * v.x + this.y * v.y;
     }
 
+    // Return the squared norm
+    sqnorm() {
+        return this.dot(this);
+    }
+
     // Return the norm
     norm() {
-        return Math.sqrt(this.dot(this));
+        return Math.sqrt(this.sqnorm());
     }
 
     // Compute the direct normal vector
@@ -68,6 +79,10 @@ export class Point2 extends Vector2 {
     to(p) {
         return new Vector2(p.x - this.x, p.y - this.y);
     }
+
+    static get origin() {
+        return new Point2(0, 0);
+    }
 }
 
 
@@ -82,6 +97,11 @@ export class Complex {
     // Return the negated angle
     neg() {
         return new Complex(this.cos, -this.sin);
+    }
+
+    // Return the angle in radians
+    radians() {
+        return Math.atan2(this.sin, this.cos);
     }
 }
 
