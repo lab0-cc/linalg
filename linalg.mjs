@@ -285,6 +285,11 @@ export class BoundingBox2 {
     center() {
         return new Point2((this.min.x + this.max.x) / 2, (this.min.y + this.max.y) / 2);
     }
+
+    // Check whether this box contains another
+    contains(b) {
+        return this.min.x <= b.min.x && this.min.y <= b.min.y && this.max.x >= b.max.x && this.max.y >= b.max.y;
+    }
 }
 
 
