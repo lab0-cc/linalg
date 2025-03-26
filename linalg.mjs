@@ -295,18 +295,40 @@ export class BoundingBox2 {
 
 // 2D polygon class
 export class Polygon2 {
-    #points;
+    #open;
+    #selfIntersecting;
+    #boundingBox;
+    #edges;
 
-    constructor(points) {
-        this.#points = points;
+    constructor(points, open=false) {
+        this.points = points;
+        this.#open = open;
+        this.#reset();
+        this.#reindex();
+    }
+
+    // Reset the polygon state
+    #reset() {
+        if (this.points.length < 4)
+            this.#selfIntersecting = false;
+        else
+            this.#selfIntersecting = null;
+        this.#boundingBox = null;
+        this.#edges = null;
+    }
+
+    // Reindex the points
+    #reindex() {
+        let index = 0;
+        this.points.forEach(p => p.index = index++);
     }
 
     // Return the polygon area, computed with the shoolace algorithm
     area() {
         let vectors = [];
-        const nPoints = this.#points.length;
+        const nPoints = this.points.length;
         for (let i = 0; i < nPoints; i++)
-            vectors.push(this.#points[i].to(this.#points[(i+1) % nPoints]));
+            vectors.push(this.points[i].to(this.points[(i+1) % nPoints]));
         let area = 0;
         for (let i = 0; i < nPoints; i++)
             area += vectors[i].cross(vectors[(i+1) % nPoints]);
@@ -315,13 +337,16 @@ export class Polygon2 {
 
     // Return a new rotated polygon around the origin
     rotated(angle) {
-        return new Polygon2(this.#points.map(p => p.rotated(angle)));
+        return new Polygon2(this.points.map(p => p.rotated(angle)));
     }
 
     // Return the bounding box of the polygon
     boundingBox() {
+        if (this.#boundingBox !== null)
+            return this.#boundingBox;
+
         let xmin, xmax, ymin, ymax;
-        for (const {x, y} of this.#points) {
+        for (const {x, y} of this.points) {
             if (!(x >= xmin))
                 xmin = x;
             if (!(x <= xmax))
@@ -332,6 +357,69 @@ export class Polygon2 {
                 ymax = y;
         }
         return new BoundingBox2(new Point2(xmin, ymin), new Point2(xmax, ymax));
+    }
+
+    // Return the polygon’s edges
+    edges() {
+        if (this.#edges !== null)
+            return this.#edges;
+
+        this.#edges = [];
+        for (let i = 0; i < this.points.length - 1; i++)
+            this.#edges.push(new Segment2(this.points[i], this.points[i+1]));
+        if (!this.#open)
+            this.#edges.push(new Segment2(this.points.at(-1), this.points[0]));
+        return this.#edges;
+    }
+
+    // Return whether the polygon is self-intersecting. The algorithm used here is pretty expensive
+    // but avoids painful precision checks.
+    isSelfIntersecting() {
+        if (this.#selfIntersecting !== null)
+            return this.#selfIntersecting;
+
+        const edges = this.edges();
+        const length = edges.length;
+
+        // We iterate over the edges, except the last two
+        for (let i = 0; i < length - 2; i++) {
+            // We iterate over the edges from i+2 to the last one (except at the first iteration)
+            const bound = !this.#open && i === 0 ? length - 1 : length;
+            for (let j = i + 2; j < bound; j++) {
+                if (edges[i].intersects(edges[j])) {
+                    this.#selfIntersecting = true;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Return the polygon’s winding number for a given point
+    windingNumber(p) {
+        let wn = 0;
+        let prev = this.points.at(-1);
+        for (const curr of this.points) {
+            if (prev.y <= p.y) {
+                if (curr.y > p.y && prev.to(curr).cross(prev.to(p)) > 0)
+                    wn++;
+            }
+            else if (curr.y <= p.y) {
+                if (prev.to(curr).cross(prev.to(p)) < 0)
+                    wn--;
+            }
+            prev = curr;
+        }
+        return wn;
+    }
+
+    // Checks whether this polygon intersects with another
+    intersects(p) {
+        for (const edge of this.edges())
+            for (const edge2 of p.edges())
+                if (edge.intersects(edge2))
+                    return true;
+        return false;
     }
 }
 
