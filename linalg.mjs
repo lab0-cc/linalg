@@ -114,6 +114,111 @@ export class Angle2 extends Complex {
 }
 
 
+// 2D line class
+export class Line2 {
+    constructor(p, o) {
+        this.p = p;
+        if (o instanceof Point2) {
+            this.o = o;
+            this.v = p.to(o);
+        }
+        else {
+            this.o = p.plus(o);
+            this.v = o;
+        }
+        this.points = [p, o];
+    }
+
+    // Compute an internal projection factor
+    _projectionFactor(p) {
+        return this.p.to(p).dot(this.v) / this.v.sqnorm();
+    }
+
+    // Compute the orthogonal projection of a point onto the line
+    project(p) {
+        const pos = this._projectionFactor(p);
+        return this.p.plus(this.v.scaled(pos));
+    }
+
+    // Compute the minimal distance between a point and the line
+    distance(p) {
+        return this.project(p).to(p).norm();
+    }
+
+    // Determine whether an intersection factor is valid
+    _validIntersectionFactor(f) {
+        return true;
+    }
+
+    // Compute the intersection with another line
+    intersect(l) {
+        const den = this.v.cross(l.v);
+        const v = this.p.to(l.p).scaled(1 / den);
+        const factor = v.cross(l.v);
+        if (!this._validIntersectionFactor(factor) || !l._validIntersectionFactor(v.cross(this.v)))
+            return null;
+        return this.p.plus(this.v.scaled(factor));
+    }
+
+    // Checks whether this line intersects with another
+    intersects(l) {
+        const den = this.v.cross(l.v);
+        const v = this.p.to(l.p).scaled(1 / den);
+        return this._validIntersectionFactor(v.cross(l.v)) && l._validIntersectionFactor(v.cross(this.v));
+    }
+}
+
+
+// 2D ray class
+export class Ray2 extends Line2 {
+    // Compute the orthogonal projection of a point onto the ray
+    project(p, clip=false) {
+        const pos = this._projectionFactor(p);
+        if (pos <= 0) {
+            if (clip)
+                return this.p;
+            return null;
+        }
+        return this.p.plus(this.v.scaled(pos));
+    }
+
+    // Compute the minimal distance between a point and the ray
+    distance(p) {
+        return this.project(p, true).to(p).norm();
+    }
+
+    // Determine whether an intersection factor is valid
+    _validIntersectionFactor(f) {
+        return f >= 0;
+    }
+}
+
+
+// 2D segment class
+export class Segment2 extends Ray2 {
+    // Compute the orthogonal projection of a point onto the segment
+    project(p, clip=false) {
+        const pos = this._projectionFactor(p);
+        if (pos <= 0) {
+            if (clip)
+                return this.p;
+            return null;
+        }
+        if (pos >= 1) {
+            if (clip)
+                return this.o;
+            return null;
+        }
+        return this.p.plus(this.v.scaled(pos));
+    }
+
+    // Determine whether an intersection factor is valid
+    _validIntersectionFactor(f) {
+        return f >= 0 && f <= 1;
+    }
+}
+
+
 // 2D matrix class
 export class Matrix2 {
     constructor(a, b, c, d) {
