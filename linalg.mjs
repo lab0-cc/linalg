@@ -190,6 +190,11 @@ export class Line2 extends Shape {
         }
         this.v = this.p.to(this.o);
     }
+
+    // Return a new line scaled by the given factor
+    scaled(factor) {
+        return new this.constructor(this.p.scaled(factor), this.o.scaled(factor));
+    }
 }
 
 
@@ -466,6 +471,11 @@ export class Polygon2 extends Shape {
         this.points.splice(i, 1);
         this.#reset();
         this.#reindex();
+    }
+
+    // Return a new polygon scaled by the given factor
+    scaled(factor) {
+        return new this.constructor(this.points.map(p => p.scaled(factor)), this.#open);
     }
 }
 
