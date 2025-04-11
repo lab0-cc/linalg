@@ -83,6 +83,11 @@ export class Point2 extends Vector2 {
     static get origin() {
         return new Point2(0, 0);
     }
+
+    // Return how to serialize data
+    toJSON() {
+        return { x: this.x, y: this.y };
+    }
 }
 
 
@@ -119,6 +124,11 @@ class Shape {
     // Update a point in the shape
     update(i, p) {
         this.points[i] = p;
+    }
+
+    // Return how to serialize data
+    toJSON() {
+        return this.points.map(e => e.toJSON());
     }
 }
 
