@@ -146,7 +146,7 @@ export class Line2 extends Shape {
             this.o = p.plus(o);
             this.v = o;
         }
-        this.points = [p, o];
+        this.points = [this.p, this.o];
     }
 
     // Compute an internal projection factor
